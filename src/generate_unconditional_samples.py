@@ -9,11 +9,11 @@ import tensorflow as tf
 import model, sample, encoder
 
 def sample_model(
-    model_name='124M',
+    model_name='774M',
     seed=None,
     nsamples=0,
     batch_size=1,
-    length=None,
+    length=100,
     temperature=1,
     top_k=0,
     top_p=1,
