@@ -16,10 +16,6 @@ from load_dataset import load_dataset, Sampler
 from accumulate import AccumulatingOptimizer
 import memory_saving_gradients
 
-CHECKPOINT_DIR = 'checkpoint'
-SAMPLE_DIR = 'samples'
-
-
 parser = argparse.ArgumentParser(
     description='Fine-tune GPT-2 on your custom dataset.',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -51,6 +47,8 @@ parser.add_argument('--val_dataset', metavar='PATH', type=str, default=None, hel
 parser.add_argument('--val_batch_size', metavar='SIZE', type=int, default=2, help='Batch size for validation.')
 parser.add_argument('--val_batch_count', metavar='N', type=int, default=40, help='Number of batches for validation.')
 parser.add_argument('--val_every', metavar='STEPS', type=int, default=0, help='Calculate validation loss every STEPS steps.')
+parser.add_argument('--sample_dir', metavar='SAMPLE_DIR', type=str, default='samples', help='')
+parser.add_argument('--checkpoint_dir', metavar='CHECKPOINT_DIR', type=str, default='checkpoint', help='')
 
 
 def maketree(path):
@@ -147,7 +145,7 @@ def main():
         summaries = tf.summary.merge([summary_lr, summary_loss])
 
         summary_log = tf.summary.FileWriter(
-            os.path.join(CHECKPOINT_DIR, args.run_name))
+            os.path.join(args.checkpoint_dir, args.run_name))
 
         saver = tf.train.Saver(
             var_list=all_vars,
@@ -157,7 +155,7 @@ def main():
 
         if args.restore_from == 'latest':
             ckpt = tf.train.latest_checkpoint(
-                os.path.join(CHECKPOINT_DIR, args.run_name))
+                os.path.join(args.checkpoint_dir, args.run_name))
             if ckpt is None:
                 # Get fresh GPT weights if new run.
                 ckpt = tf.train.latest_checkpoint(
@@ -189,7 +187,7 @@ def main():
                            for _ in range(args.val_batch_count)]
 
         counter = 1
-        counter_path = os.path.join(CHECKPOINT_DIR, args.run_name, 'counter')
+        counter_path = os.path.join(args.checkpoint_dir, args.run_name, 'counter')
         if os.path.exists(counter_path):
             # Load the step number if we're resuming a run
             # Add 1 so we don't immediately try to save again
@@ -197,14 +195,14 @@ def main():
                 counter = int(fp.read()) + 1
 
         def save():
-            maketree(os.path.join(CHECKPOINT_DIR, args.run_name))
+            maketree(os.path.join(args.checkpoint_dir, args.run_name))
             print(
                 'Saving',
-                os.path.join(CHECKPOINT_DIR, args.run_name,
+                os.path.join(args.checkpoint_dir, args.run_name,
                              'model-{}').format(counter))
             saver.save(
                 sess,
-                os.path.join(CHECKPOINT_DIR, args.run_name, 'model'),
+                os.path.join(args.checkpoint_dir, args.run_name, 'model'),
                 global_step=counter)
             with open(counter_path, 'w') as fp:
                 fp.write(str(counter) + '\n')
@@ -225,9 +223,9 @@ def main():
                     all_text.append(text)
                     index += 1
             print(text)
-            maketree(os.path.join(SAMPLE_DIR, args.run_name))
+            maketree(os.path.join(args.sample_dir, args.run_name))
             with open(
-                    os.path.join(SAMPLE_DIR, args.run_name,
+                    os.path.join(args.sample_dir, args.run_name,
                                  'samples-{}').format(counter), 'w', encoding=args.encoding) as fp:
                 fp.write('\n'.join(all_text))
 
