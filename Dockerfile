@@ -1,18 +1,23 @@
-FROM tensorflow/tensorflow:1.12.0-py3
+FROM tensorflow/tensorflow:1.15.2-py3
 
 ENV LANG=C.UTF-8
 
-RUN mkdir /gpt-2
-WORKDIR /gpt-2
+RUN mkdir /opt/program/
+WORKDIR /opt/program/
 
-COPY requirements.txt /gpt-2
+COPY requirements.txt /opt/program
 RUN pip3 install -r requirements.txt
 
-COPY download_model.py /gpt-2
+COPY download_model.py /opt/program
+RUN python3 download_model.py 124M
+RUN python3 download_model.py 355M
 RUN python3 download_model.py 774M
+RUN python3 download_model.py 1558M
 
-COPY . /gpt-2
+COPY . /opt/program
 
-ENV PYTHONPATH=/gpt/src
-ENV PATH="/gpt-2:${PATH}"
+ENV PYTHONPATH="/opt/program/src/"
+ENV PATH="/opt/program/:${PATH}"
 
+ENV PYTHONUNBUFFERED=TRUE
+ENV PYTHONDONTWRITEBYTECODE=TRUE
